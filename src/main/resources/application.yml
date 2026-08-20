@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: youtube-bot
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://127.0.0.1:5432/youtube_bot}
+    username: ${DB_USERNAME:youtube_bot}
+    password: ${DB_PASSWORD:youtube_bot}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+
+server:
+  address: 127.0.0.1
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always

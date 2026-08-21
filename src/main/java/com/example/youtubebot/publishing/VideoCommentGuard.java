@@ -47,7 +47,23 @@ public class VideoCommentGuard {
         this.updatedAt = updatedAt;
     }
 
+    public String getVideoId() {
+        return videoId;
+    }
+
     public GuardStatus getStatus() {
         return status;
+    }
+
+    public UUID getAttemptId() {
+        return attemptId;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public Instant getUpdatedAt() {
+        return updatedAt;
     }
 }

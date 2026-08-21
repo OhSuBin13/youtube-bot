@@ -7,5 +7,5 @@ import java.util.UUID;
 
 public interface AiGenerationRepository extends JpaRepository<AiGeneration, UUID> {
 
-    List<AiGeneration> findAllByVideoIdOrderByCreatedAtDesc(String videoId);
+    List<AiGenerationSummary> findAllByVideoIdOrderByCreatedAtDesc(String videoId);
 }

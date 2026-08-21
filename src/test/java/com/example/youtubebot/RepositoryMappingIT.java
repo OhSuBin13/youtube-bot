@@ -1,12 +1,14 @@
 package com.example.youtubebot;
 
 import com.example.youtubebot.context.ChannelContext;
+import com.example.youtubebot.context.ExpiredVideoContext;
 import com.example.youtubebot.context.PublicComments;
 import com.example.youtubebot.context.VideoContext;
 import com.example.youtubebot.context.VideoContextRepository;
 import com.example.youtubebot.context.VideoMetadata;
 import com.example.youtubebot.generation.AiGeneration;
 import com.example.youtubebot.generation.AiGenerationRepository;
+import com.example.youtubebot.generation.AiGenerationSummary;
 import com.example.youtubebot.generation.ContextStatus;
 import com.example.youtubebot.generation.DuplicateCheckResult;
 import com.example.youtubebot.generation.EvidenceFields;
@@ -16,6 +18,7 @@ import com.example.youtubebot.generation.SafetyReview;
 import com.example.youtubebot.publishing.ApprovedCommentAttempt;
 import com.example.youtubebot.publishing.CommentAttempt;
 import com.example.youtubebot.publishing.CommentAttemptRepository;
+import com.example.youtubebot.publishing.CommentAttemptSummary;
 import com.example.youtubebot.publishing.CommentAttemptStatus;
 import com.example.youtubebot.publishing.GuardStatus;
 import com.example.youtubebot.publishing.VideoCommentGuard;
@@ -33,6 +36,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -183,21 +187,70 @@ class RepositoryMappingIT extends PostgreSqlIntegrationTest {
                 String.class,
                 videoId));
 
+        List<ExpiredVideoContext> expiredContexts = videoContextRepository
+                .findAllByExpiresAtBefore(now.plus(31, ChronoUnit.DAYS));
+        assertEquals(1, expiredContexts.size());
+        assertEquals(videoId, expiredContexts.getFirst().getVideoId());
+        assertEquals(now.plus(30, ChronoUnit.DAYS), expiredContexts.getFirst().getExpiresAt());
+
+        List<AiGenerationSummary> generationSummaries = aiGenerationRepository
+                .findAllByVideoIdOrderByCreatedAtDesc(videoId);
+        assertEquals(1, generationSummaries.size());
+        AiGenerationSummary generationSummary = generationSummaries.getFirst();
+        assertEquals(draftId, generationSummary.getDraftId());
+        assertFalse(generationSummary.getAiOriginalText().isBlank());
+        assertNull(generationSummary.getUserEditedText());
+        assertEquals(ContextStatus.SUFFICIENT, generationSummary.getContextStatus());
+        assertEquals(SafetyReview.REQUIRES_HUMAN_REVIEW, generationSummary.getSafetyReview());
+        assertEquals(now, generationSummary.getCreatedAt());
+
+        List<CommentAttemptSummary> attemptSummaries = commentAttemptRepository
+                .findAllByVideoIdOrderByApprovedAtDesc(videoId);
+        assertEquals(1, attemptSummaries.size());
+        CommentAttemptSummary attemptSummary = attemptSummaries.getFirst();
+        assertEquals(attemptId, attemptSummary.getAttemptId());
+        assertFalse(attemptSummary.getApprovedText().isBlank());
+        assertEquals(CommentAttemptStatus.APPROVED, attemptSummary.getStatus());
+        assertNull(attemptSummary.getYoutubeCommentId());
+        assertNull(attemptSummary.getRequestedAt());
+        assertEquals(now, attemptSummary.getApprovedAt());
+
         entityManager.clear();
         VideoContext restoredContext = videoContextRepository.findById(videoId).orElseThrow();
         AiGeneration restoredGeneration = aiGenerationRepository.findById(draftId).orElseThrow();
         CommentAttempt restoredAttempt = commentAttemptRepository.findById(attemptId).orElseThrow();
         VideoCommentGuard restoredGuard = videoCommentGuardRepository.findById(videoId).orElseThrow();
+        assertEquals(videoId, restoredContext.getVideoId());
+        assertEquals("https://www.youtube.com/watch?v=" + videoId, restoredContext.getCanonicalUrl());
         assertEquals(videoMetadata, restoredContext.getVideoMetadata());
         assertEquals(channelContext, restoredContext.getChannelContext());
         assertEquals(publicComments, restoredContext.getPublicComments());
+        assertEquals(now, restoredContext.getCollectedAt());
+        assertEquals(now.plus(30, ChronoUnit.DAYS), restoredContext.getExpiresAt());
+        assertEquals(draftId, restoredGeneration.getDraftId());
+        assertEquals(videoId, restoredGeneration.getVideoId());
+        assertEquals("qwen3:4b", restoredGeneration.getModelName());
+        assertEquals("v1", restoredGeneration.getPromptVersion());
         assertEquals(evidenceFields, restoredGeneration.getEvidenceFields());
         assertEquals(riskTopics, restoredGeneration.getRiskTopics());
         assertEquals(duplicateCheckResult, restoredGeneration.getDuplicateCheckResult());
         assertEquals(ContextStatus.SUFFICIENT, restoredGeneration.getContextStatus());
         assertEquals(SafetyReview.REQUIRES_HUMAN_REVIEW, restoredGeneration.getSafetyReview());
+        assertEquals(restoredGeneration.getAiOriginalText(), restoredGeneration.textForReview());
+        assertEquals(now, restoredGeneration.getCreatedAt());
+        assertEquals(now, restoredGeneration.getUpdatedAt());
+        assertEquals(attemptId, restoredAttempt.getAttemptId());
+        assertEquals(videoId, restoredAttempt.getVideoId());
+        assertEquals(draftId, restoredAttempt.getDraftId());
+        assertEquals("UC_AUTHOR_CHANNEL", restoredAttempt.getAuthorChannelId());
+        assertEquals("UC_TARGET_CHANNEL", restoredAttempt.getTargetChannelId());
         assertEquals(CommentAttemptStatus.APPROVED, restoredAttempt.getStatus());
+        assertEquals(now, restoredAttempt.getApprovedAt());
+        assertEquals(videoId, restoredGuard.getVideoId());
         assertEquals(GuardStatus.PUBLISHING, restoredGuard.getStatus());
+        assertEquals(attemptId, restoredGuard.getAttemptId());
+        assertEquals(now, restoredGuard.getCreatedAt());
+        assertEquals(now, restoredGuard.getUpdatedAt());
     }
 
     @Test

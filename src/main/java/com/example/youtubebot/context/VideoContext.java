@@ -63,6 +63,14 @@ public class VideoContext {
         this.expiresAt = expiresAt;
     }
 
+    public String getVideoId() {
+        return videoId;
+    }
+
+    public String getCanonicalUrl() {
+        return canonicalUrl;
+    }
+
     public VideoMetadata getVideoMetadata() {
         return videoMetadata;
     }
@@ -73,5 +81,17 @@ public class VideoContext {
 
     public PublicComments getPublicComments() {
         return publicComments;
+    }
+
+    public String getUserSummary() {
+        return userSummary;
+    }
+
+    public Instant getCollectedAt() {
+        return collectedAt;
+    }
+
+    public Instant getExpiresAt() {
+        return expiresAt;
     }
 }

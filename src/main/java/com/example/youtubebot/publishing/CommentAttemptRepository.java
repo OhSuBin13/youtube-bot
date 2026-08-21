@@ -7,5 +7,5 @@ import java.util.UUID;
 
 public interface CommentAttemptRepository extends JpaRepository<CommentAttempt, UUID> {
 
-    List<CommentAttempt> findAllByVideoIdOrderByApprovedAtDesc(String videoId);
+    List<CommentAttemptSummary> findAllByVideoIdOrderByApprovedAtDesc(String videoId);
 }

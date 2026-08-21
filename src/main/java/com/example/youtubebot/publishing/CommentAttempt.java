@@ -141,6 +141,34 @@ public class CommentAttempt {
         }
     }
 
+    public UUID getAttemptId() {
+        return attemptId;
+    }
+
+    public String getVideoId() {
+        return videoId;
+    }
+
+    public UUID getDraftId() {
+        return draftId;
+    }
+
+    public String getAiGeneratedText() {
+        return aiGeneratedText;
+    }
+
+    public String getApprovedText() {
+        return approvedText;
+    }
+
+    public String getAuthorChannelId() {
+        return authorChannelId;
+    }
+
+    public String getTargetChannelId() {
+        return targetChannelId;
+    }
+
     public CommentAttemptStatus getStatus() {
         return status;
     }
@@ -151,6 +179,10 @@ public class CommentAttempt {
 
     public String getErrorCode() {
         return errorCode;
+    }
+
+    public Instant getApprovedAt() {
+        return approvedAt;
     }
 
     public Instant getRequestedAt() {

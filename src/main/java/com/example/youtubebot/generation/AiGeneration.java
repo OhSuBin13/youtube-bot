@@ -87,6 +87,26 @@ public class AiGeneration {
         return new AiGeneration(input);
     }
 
+    public UUID getDraftId() {
+        return draftId;
+    }
+
+    public String getVideoId() {
+        return videoId;
+    }
+
+    public String getModelName() {
+        return modelName;
+    }
+
+    public String getPromptVersion() {
+        return promptVersion;
+    }
+
+    public String getAiOriginalText() {
+        return aiOriginalText;
+    }
+
     public ContextStatus getContextStatus() {
         return contextStatus;
     }
@@ -105,5 +125,25 @@ public class AiGeneration {
 
     public DuplicateCheckResult getDuplicateCheckResult() {
         return duplicateCheckResult;
+    }
+
+    public String getGenerationNote() {
+        return generationNote;
+    }
+
+    public String getUserEditedText() {
+        return userEditedText;
+    }
+
+    public String textForReview() {
+        return userEditedText == null ? aiOriginalText : userEditedText;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public Instant getUpdatedAt() {
+        return updatedAt;
     }
 }

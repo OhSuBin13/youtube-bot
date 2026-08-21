@@ -2,6 +2,8 @@ package com.example.youtubebot.persistence;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
@@ -35,7 +37,8 @@ public class CommentAttempt {
     private String targetChannelId;
 
     @Column(name = "status", nullable = false, length = 20)
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private CommentAttemptStatus status;
 
     @Column(name = "youtube_comment_id")
     private String youtubeCommentId;
@@ -63,7 +66,7 @@ public class CommentAttempt {
             String approvedText,
             String authorChannelId,
             String targetChannelId,
-            String status,
+            CommentAttemptStatus status,
             String youtubeCommentId,
             String errorCode,
             Instant approvedAt,
@@ -82,5 +85,9 @@ public class CommentAttempt {
         this.approvedAt = approvedAt;
         this.requestedAt = requestedAt;
         this.completedAt = completedAt;
+    }
+
+    public CommentAttemptStatus getStatus() {
+        return status;
     }
 }

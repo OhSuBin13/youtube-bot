@@ -3,6 +3,7 @@ package com.example.youtubebot.persistence;
 import com.example.youtubebot.oauth.OAuthConnectionCredentials;
 import com.example.youtubebot.oauth.OAuthConnectionInput;
 import com.example.youtubebot.oauth.OAuthTokenStore;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,6 +62,9 @@ class PersistenceIT {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    private EntityManager entityManager;
 
     @Autowired
     private OAuthTokenStore tokenStore;
@@ -159,8 +163,8 @@ class PersistenceIT {
                 "v1",
                 "유익한 영상 감사합니다.",
                 "[\"video.title\"]",
-                "sufficient",
-                "passed",
+                ContextStatus.SUFFICIENT,
+                SafetyReview.PASSED,
                 "[]",
                 "영상 제목을 근거로 작성",
                 "{\"duplicate\":false}",
@@ -175,14 +179,14 @@ class PersistenceIT {
                 "유익한 설명 감사합니다.",
                 "UC_AUTHOR_CHANNEL",
                 "UC_TARGET_CHANNEL",
-                "PUBLISHING",
+                CommentAttemptStatus.PUBLISHING,
                 null,
                 null,
                 now,
                 now,
                 null));
         videoCommentGuardRepository.saveAndFlush(new VideoCommentGuard(
-                videoId, "PUBLISHING", attemptId, now, now));
+                videoId, GuardStatus.PUBLISHING, attemptId, now, now));
 
         assertTrue(videoContextRepository.existsById(videoId));
         assertTrue(aiGenerationRepository.existsById(draftId));
@@ -196,6 +200,31 @@ class PersistenceIT {
                 "SELECT jsonb_typeof(evidence_fields) FROM ai_generation WHERE draft_id = ?",
                 String.class,
                 draftId));
+        assertEquals("sufficient", jdbcTemplate.queryForObject(
+                "SELECT context_status FROM ai_generation WHERE draft_id = ?",
+                String.class,
+                draftId));
+        assertEquals("passed", jdbcTemplate.queryForObject(
+                "SELECT safety_review FROM ai_generation WHERE draft_id = ?",
+                String.class,
+                draftId));
+        assertEquals("PUBLISHING", jdbcTemplate.queryForObject(
+                "SELECT status FROM comment_attempt WHERE attempt_id = ?",
+                String.class,
+                attemptId));
+        assertEquals("PUBLISHING", jdbcTemplate.queryForObject(
+                "SELECT status FROM video_comment_guard WHERE video_id = ?",
+                String.class,
+                videoId));
+
+        entityManager.clear();
+        AiGeneration restoredGeneration = aiGenerationRepository.findById(draftId).orElseThrow();
+        CommentAttempt restoredAttempt = commentAttemptRepository.findById(attemptId).orElseThrow();
+        VideoCommentGuard restoredGuard = videoCommentGuardRepository.findById(videoId).orElseThrow();
+        assertEquals(ContextStatus.SUFFICIENT, restoredGeneration.getContextStatus());
+        assertEquals(SafetyReview.PASSED, restoredGeneration.getSafetyReview());
+        assertEquals(CommentAttemptStatus.PUBLISHING, restoredAttempt.getStatus());
+        assertEquals(GuardStatus.PUBLISHING, restoredGuard.getStatus());
     }
 
     @Test

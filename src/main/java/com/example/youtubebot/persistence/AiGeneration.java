@@ -1,6 +1,7 @@
 package com.example.youtubebot.persistence;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -35,10 +36,12 @@ public class AiGeneration {
     private String evidenceFields;
 
     @Column(name = "context_status", nullable = false, length = 20)
-    private String contextStatus;
+    @Convert(converter = ContextStatusConverter.class)
+    private ContextStatus contextStatus;
 
     @Column(name = "safety_review", nullable = false, length = 30)
-    private String safetyReview;
+    @Convert(converter = SafetyReviewConverter.class)
+    private SafetyReview safetyReview;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "risk_topics", nullable = false, columnDefinition = "jsonb")
@@ -70,8 +73,8 @@ public class AiGeneration {
             String promptVersion,
             String aiOriginalText,
             String evidenceFields,
-            String contextStatus,
-            String safetyReview,
+            ContextStatus contextStatus,
+            SafetyReview safetyReview,
             String riskTopics,
             String generationNote,
             String duplicateCheckResult,
@@ -92,5 +95,13 @@ public class AiGeneration {
         this.userEditedText = userEditedText;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+    }
+
+    public ContextStatus getContextStatus() {
+        return contextStatus;
+    }
+
+    public SafetyReview getSafetyReview() {
+        return safetyReview;
     }
 }

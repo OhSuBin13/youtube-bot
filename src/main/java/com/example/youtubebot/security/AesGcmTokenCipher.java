@@ -1,6 +1,5 @@
 package com.example.youtubebot.security;
 
-import com.example.youtubebot.config.TokenEncryptionProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

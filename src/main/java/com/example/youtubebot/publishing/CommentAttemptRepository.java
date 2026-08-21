@@ -1,4 +1,4 @@
-package com.example.youtubebot.persistence;
+package com.example.youtubebot.publishing;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -7,5 +7,5 @@ import java.util.UUID;
 
 public interface CommentAttemptRepository extends JpaRepository<CommentAttempt, UUID> {
 
-    List<CommentAttempt> findAllByVideoIdOrderByApprovedAtDesc(String videoId);
+    List<CommentAttemptSummary> findAllByVideoIdOrderByApprovedAtDesc(String videoId);
 }

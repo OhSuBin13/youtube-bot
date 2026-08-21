@@ -1,4 +1,4 @@
-package com.example.youtubebot.persistence;
+package com.example.youtubebot.publishing;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 

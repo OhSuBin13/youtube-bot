@@ -1,4 +1,4 @@
-package com.example.youtubebot.persistence;
+package com.example.youtubebot.context;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -22,15 +22,15 @@ public class VideoContext {
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "video_metadata", nullable = false, columnDefinition = "jsonb")
-    private String videoMetadata;
+    private VideoMetadata videoMetadata;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "channel_context", nullable = false, columnDefinition = "jsonb")
-    private String channelContext;
+    private ChannelContext channelContext;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "public_comments", nullable = false, columnDefinition = "jsonb")
-    private String publicComments;
+    private PublicComments publicComments;
 
     @Column(name = "user_summary")
     private String userSummary;
@@ -47,9 +47,9 @@ public class VideoContext {
     public VideoContext(
             String videoId,
             String canonicalUrl,
-            String videoMetadata,
-            String channelContext,
-            String publicComments,
+            VideoMetadata videoMetadata,
+            ChannelContext channelContext,
+            PublicComments publicComments,
             String userSummary,
             Instant collectedAt,
             Instant expiresAt) {
@@ -61,5 +61,37 @@ public class VideoContext {
         this.userSummary = userSummary;
         this.collectedAt = collectedAt;
         this.expiresAt = expiresAt;
+    }
+
+    public String getVideoId() {
+        return videoId;
+    }
+
+    public String getCanonicalUrl() {
+        return canonicalUrl;
+    }
+
+    public VideoMetadata getVideoMetadata() {
+        return videoMetadata;
+    }
+
+    public ChannelContext getChannelContext() {
+        return channelContext;
+    }
+
+    public PublicComments getPublicComments() {
+        return publicComments;
+    }
+
+    public String getUserSummary() {
+        return userSummary;
+    }
+
+    public Instant getCollectedAt() {
+        return collectedAt;
+    }
+
+    public Instant getExpiresAt() {
+        return expiresAt;
     }
 }

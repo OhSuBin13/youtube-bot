@@ -1,6 +1,5 @@
 package com.example.youtubebot.security;
 
-import com.example.youtubebot.config.TokenEncryptionProperties;
 import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;

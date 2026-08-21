@@ -1,4 +1,4 @@
-package com.example.youtubebot.persistence;
+package com.example.youtubebot.generation;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -7,5 +7,5 @@ import java.util.UUID;
 
 public interface AiGenerationRepository extends JpaRepository<AiGeneration, UUID> {
 
-    List<AiGeneration> findAllByVideoIdOrderByCreatedAtDesc(String videoId);
+    List<AiGenerationSummary> findAllByVideoIdOrderByCreatedAtDesc(String videoId);
 }

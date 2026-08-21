@@ -1,4 +1,4 @@
-package com.example.youtubebot.config;
+package com.example.youtubebot.security;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

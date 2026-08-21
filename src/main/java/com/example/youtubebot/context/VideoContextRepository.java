@@ -1,4 +1,4 @@
-package com.example.youtubebot.persistence;
+package com.example.youtubebot.context;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface VideoContextRepository extends JpaRepository<VideoContext, String> {
 
-    List<VideoContext> findAllByExpiresAtBefore(Instant now);
+    List<ExpiredVideoContext> findAllByExpiresAtBefore(Instant now);
 
     long deleteByExpiresAtBefore(Instant now);
 }

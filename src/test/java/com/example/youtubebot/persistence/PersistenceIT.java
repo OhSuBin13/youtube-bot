@@ -179,7 +179,7 @@ class PersistenceIT {
                 "사용자 요약",
                 now,
                 now.plus(30, ChronoUnit.DAYS)));
-        aiGenerationRepository.saveAndFlush(new AiGeneration(
+        aiGenerationRepository.saveAndFlush(AiGeneration.create(new NewAiGeneration(
                 draftId,
                 videoId,
                 "qwen3:4b",
@@ -191,10 +191,8 @@ class PersistenceIT {
                 riskTopics,
                 "영상 제목을 근거로 작성",
                 duplicateCheckResult,
-                "유익한 설명 감사합니다.",
-                now,
-                now));
-        commentAttemptRepository.saveAndFlush(new CommentAttempt(
+                now)));
+        commentAttemptRepository.saveAndFlush(CommentAttempt.approved(new ApprovedCommentAttempt(
                 attemptId,
                 videoId,
                 draftId,
@@ -202,12 +200,7 @@ class PersistenceIT {
                 "유익한 설명 감사합니다.",
                 "UC_AUTHOR_CHANNEL",
                 "UC_TARGET_CHANNEL",
-                CommentAttemptStatus.PUBLISHING,
-                null,
-                null,
-                now,
-                now,
-                null));
+                now)));
         videoCommentGuardRepository.saveAndFlush(new VideoCommentGuard(
                 videoId, GuardStatus.PUBLISHING, attemptId, now, now));
 
@@ -256,9 +249,20 @@ class PersistenceIT {
                 "SELECT safety_review FROM ai_generation WHERE draft_id = ?",
                 String.class,
                 draftId));
-        assertEquals("PUBLISHING", jdbcTemplate.queryForObject(
+        assertEquals(true, jdbcTemplate.queryForObject(
+                "SELECT user_edited_text IS NULL AND created_at = updated_at "
+                        + "FROM ai_generation WHERE draft_id = ?",
+                Boolean.class,
+                draftId));
+        assertEquals("APPROVED", jdbcTemplate.queryForObject(
                 "SELECT status FROM comment_attempt WHERE attempt_id = ?",
                 String.class,
+                attemptId));
+        assertEquals(true, jdbcTemplate.queryForObject(
+                "SELECT youtube_comment_id IS NULL AND error_code IS NULL "
+                        + "AND requested_at IS NULL AND completed_at IS NULL "
+                        + "FROM comment_attempt WHERE attempt_id = ?",
+                Boolean.class,
                 attemptId));
         assertEquals("PUBLISHING", jdbcTemplate.queryForObject(
                 "SELECT status FROM video_comment_guard WHERE video_id = ?",
@@ -278,7 +282,7 @@ class PersistenceIT {
         assertEquals(duplicateCheckResult, restoredGeneration.getDuplicateCheckResult());
         assertEquals(ContextStatus.SUFFICIENT, restoredGeneration.getContextStatus());
         assertEquals(SafetyReview.REQUIRES_HUMAN_REVIEW, restoredGeneration.getSafetyReview());
-        assertEquals(CommentAttemptStatus.PUBLISHING, restoredAttempt.getStatus());
+        assertEquals(CommentAttemptStatus.APPROVED, restoredAttempt.getStatus());
         assertEquals(GuardStatus.PUBLISHING, restoredGuard.getStatus());
     }
 

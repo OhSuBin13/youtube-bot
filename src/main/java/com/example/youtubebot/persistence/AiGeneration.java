@@ -66,35 +66,25 @@ public class AiGeneration {
     protected AiGeneration() {
     }
 
-    public AiGeneration(
-            UUID draftId,
-            String videoId,
-            String modelName,
-            String promptVersion,
-            String aiOriginalText,
-            EvidenceFields evidenceFields,
-            ContextStatus contextStatus,
-            SafetyReview safetyReview,
-            RiskTopics riskTopics,
-            String generationNote,
-            DuplicateCheckResult duplicateCheckResult,
-            String userEditedText,
-            Instant createdAt,
-            Instant updatedAt) {
-        this.draftId = draftId;
-        this.videoId = videoId;
-        this.modelName = modelName;
-        this.promptVersion = promptVersion;
-        this.aiOriginalText = aiOriginalText;
-        this.evidenceFields = evidenceFields;
-        this.contextStatus = contextStatus;
-        this.safetyReview = safetyReview;
-        this.riskTopics = riskTopics;
-        this.generationNote = generationNote;
-        this.duplicateCheckResult = duplicateCheckResult;
-        this.userEditedText = userEditedText;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
+    private AiGeneration(NewAiGeneration input) {
+        this.draftId = input.draftId();
+        this.videoId = input.videoId();
+        this.modelName = input.modelName();
+        this.promptVersion = input.promptVersion();
+        this.aiOriginalText = input.aiOriginalText();
+        this.evidenceFields = input.evidenceFields();
+        this.contextStatus = input.contextStatus();
+        this.safetyReview = input.safetyReview();
+        this.riskTopics = input.riskTopics();
+        this.generationNote = input.generationNote();
+        this.duplicateCheckResult = input.duplicateCheckResult();
+        this.userEditedText = null;
+        this.createdAt = input.createdAt();
+        this.updatedAt = input.createdAt();
+    }
+
+    public static AiGeneration create(NewAiGeneration input) {
+        return new AiGeneration(input);
     }
 
     public ContextStatus getContextStatus() {

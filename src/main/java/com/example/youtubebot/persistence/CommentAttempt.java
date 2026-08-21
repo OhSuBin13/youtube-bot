@@ -58,33 +58,24 @@ public class CommentAttempt {
     protected CommentAttempt() {
     }
 
-    public CommentAttempt(
-            UUID attemptId,
-            String videoId,
-            UUID draftId,
-            String aiGeneratedText,
-            String approvedText,
-            String authorChannelId,
-            String targetChannelId,
-            CommentAttemptStatus status,
-            String youtubeCommentId,
-            String errorCode,
-            Instant approvedAt,
-            Instant requestedAt,
-            Instant completedAt) {
-        this.attemptId = attemptId;
-        this.videoId = videoId;
-        this.draftId = draftId;
-        this.aiGeneratedText = aiGeneratedText;
-        this.approvedText = approvedText;
-        this.authorChannelId = authorChannelId;
-        this.targetChannelId = targetChannelId;
-        this.status = status;
-        this.youtubeCommentId = youtubeCommentId;
-        this.errorCode = errorCode;
-        this.approvedAt = approvedAt;
-        this.requestedAt = requestedAt;
-        this.completedAt = completedAt;
+    private CommentAttempt(ApprovedCommentAttempt input) {
+        this.attemptId = input.attemptId();
+        this.videoId = input.videoId();
+        this.draftId = input.draftId();
+        this.aiGeneratedText = input.aiGeneratedText();
+        this.approvedText = input.approvedText();
+        this.authorChannelId = input.authorChannelId();
+        this.targetChannelId = input.targetChannelId();
+        this.status = CommentAttemptStatus.APPROVED;
+        this.youtubeCommentId = null;
+        this.errorCode = null;
+        this.approvedAt = input.approvedAt();
+        this.requestedAt = null;
+        this.completedAt = null;
+    }
+
+    public static CommentAttempt approved(ApprovedCommentAttempt input) {
+        return new CommentAttempt(input);
     }
 
     public CommentAttemptStatus getStatus() {

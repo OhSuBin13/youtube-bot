@@ -33,7 +33,7 @@ public class AiGeneration {
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "evidence_fields", nullable = false, columnDefinition = "jsonb")
-    private String evidenceFields;
+    private EvidenceFields evidenceFields;
 
     @Column(name = "context_status", nullable = false, length = 20)
     @Convert(converter = ContextStatusConverter.class)
@@ -45,14 +45,14 @@ public class AiGeneration {
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "risk_topics", nullable = false, columnDefinition = "jsonb")
-    private String riskTopics;
+    private RiskTopics riskTopics;
 
     @Column(name = "generation_note", nullable = false)
     private String generationNote;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "duplicate_check_result", nullable = false, columnDefinition = "jsonb")
-    private String duplicateCheckResult;
+    private DuplicateCheckResult duplicateCheckResult;
 
     @Column(name = "user_edited_text", length = 200)
     private String userEditedText;
@@ -72,12 +72,12 @@ public class AiGeneration {
             String modelName,
             String promptVersion,
             String aiOriginalText,
-            String evidenceFields,
+            EvidenceFields evidenceFields,
             ContextStatus contextStatus,
             SafetyReview safetyReview,
-            String riskTopics,
+            RiskTopics riskTopics,
             String generationNote,
-            String duplicateCheckResult,
+            DuplicateCheckResult duplicateCheckResult,
             String userEditedText,
             Instant createdAt,
             Instant updatedAt) {
@@ -103,5 +103,17 @@ public class AiGeneration {
 
     public SafetyReview getSafetyReview() {
         return safetyReview;
+    }
+
+    public EvidenceFields getEvidenceFields() {
+        return evidenceFields;
+    }
+
+    public RiskTopics getRiskTopics() {
+        return riskTopics;
+    }
+
+    public DuplicateCheckResult getDuplicateCheckResult() {
+        return duplicateCheckResult;
     }
 }

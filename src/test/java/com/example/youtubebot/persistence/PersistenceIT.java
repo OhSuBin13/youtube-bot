@@ -147,12 +147,35 @@ class PersistenceIT {
         UUID draftId = UUID.randomUUID();
         UUID attemptId = UUID.randomUUID();
 
+        VideoMetadata videoMetadata = new VideoMetadata(
+                "테스트 영상",
+                "테스트 영상 설명",
+                List.of("테스트", "Spring"),
+                "교육",
+                "ko",
+                "ko",
+                "2026-08-20T06:00:00Z",
+                "PT5M");
+        ChannelContext channelContext = new ChannelContext(
+                "테스트 채널",
+                "테스트 채널 설명",
+                List.of("개발", "Spring"),
+                List.of("Technology"));
+        PublicComments publicComments = new PublicComments(List.of(
+                new PublicComments.PublicComment(
+                        "좋은 영상입니다",
+                        7,
+                        "2026-08-20T06:30:00Z")));
+        EvidenceFields evidenceFields = new EvidenceFields(List.of("video.title"));
+        RiskTopics riskTopics = new RiskTopics(List.of(RiskTopics.RiskTopic.FINANCE));
+        DuplicateCheckResult duplicateCheckResult = new DuplicateCheckResult(false, 0.25);
+
         videoContextRepository.saveAndFlush(new VideoContext(
                 videoId,
                 "https://www.youtube.com/watch?v=" + videoId,
-                "{\"title\":\"테스트 영상\"}",
-                "{\"title\":\"테스트 채널\"}",
-                "[{\"text\":\"좋은 영상입니다\"}]",
+                videoMetadata,
+                channelContext,
+                publicComments,
                 "사용자 요약",
                 now,
                 now.plus(30, ChronoUnit.DAYS)));
@@ -162,12 +185,12 @@ class PersistenceIT {
                 "qwen3:4b",
                 "v1",
                 "유익한 영상 감사합니다.",
-                "[\"video.title\"]",
+                evidenceFields,
                 ContextStatus.SUFFICIENT,
-                SafetyReview.PASSED,
-                "[]",
+                SafetyReview.REQUIRES_HUMAN_REVIEW,
+                riskTopics,
                 "영상 제목을 근거로 작성",
-                "{\"duplicate\":false}",
+                duplicateCheckResult,
                 "유익한 설명 감사합니다.",
                 now,
                 now));
@@ -200,11 +223,36 @@ class PersistenceIT {
                 "SELECT jsonb_typeof(evidence_fields) FROM ai_generation WHERE draft_id = ?",
                 String.class,
                 draftId));
+        assertEquals("테스트 영상", jdbcTemplate.queryForObject(
+                "SELECT video_metadata ->> 'title' FROM video_context WHERE video_id = ?",
+                String.class,
+                videoId));
+        assertEquals("개발", jdbcTemplate.queryForObject(
+                "SELECT channel_context -> 'keywords' ->> 0 FROM video_context WHERE video_id = ?",
+                String.class,
+                videoId));
+        assertEquals("좋은 영상입니다", jdbcTemplate.queryForObject(
+                "SELECT public_comments -> 0 ->> 'text' FROM video_context WHERE video_id = ?",
+                String.class,
+                videoId));
+        assertEquals("video.title", jdbcTemplate.queryForObject(
+                "SELECT evidence_fields ->> 0 FROM ai_generation WHERE draft_id = ?",
+                String.class,
+                draftId));
+        assertEquals("finance", jdbcTemplate.queryForObject(
+                "SELECT risk_topics ->> 0 FROM ai_generation WHERE draft_id = ?",
+                String.class,
+                draftId));
+        assertEquals(false, jdbcTemplate.queryForObject(
+                "SELECT (duplicate_check_result ->> 'duplicate')::boolean "
+                        + "FROM ai_generation WHERE draft_id = ?",
+                Boolean.class,
+                draftId));
         assertEquals("sufficient", jdbcTemplate.queryForObject(
                 "SELECT context_status FROM ai_generation WHERE draft_id = ?",
                 String.class,
                 draftId));
-        assertEquals("passed", jdbcTemplate.queryForObject(
+        assertEquals("requires_human_review", jdbcTemplate.queryForObject(
                 "SELECT safety_review FROM ai_generation WHERE draft_id = ?",
                 String.class,
                 draftId));
@@ -218,11 +266,18 @@ class PersistenceIT {
                 videoId));
 
         entityManager.clear();
+        VideoContext restoredContext = videoContextRepository.findById(videoId).orElseThrow();
         AiGeneration restoredGeneration = aiGenerationRepository.findById(draftId).orElseThrow();
         CommentAttempt restoredAttempt = commentAttemptRepository.findById(attemptId).orElseThrow();
         VideoCommentGuard restoredGuard = videoCommentGuardRepository.findById(videoId).orElseThrow();
+        assertEquals(videoMetadata, restoredContext.getVideoMetadata());
+        assertEquals(channelContext, restoredContext.getChannelContext());
+        assertEquals(publicComments, restoredContext.getPublicComments());
+        assertEquals(evidenceFields, restoredGeneration.getEvidenceFields());
+        assertEquals(riskTopics, restoredGeneration.getRiskTopics());
+        assertEquals(duplicateCheckResult, restoredGeneration.getDuplicateCheckResult());
         assertEquals(ContextStatus.SUFFICIENT, restoredGeneration.getContextStatus());
-        assertEquals(SafetyReview.PASSED, restoredGeneration.getSafetyReview());
+        assertEquals(SafetyReview.REQUIRES_HUMAN_REVIEW, restoredGeneration.getSafetyReview());
         assertEquals(CommentAttemptStatus.PUBLISHING, restoredAttempt.getStatus());
         assertEquals(GuardStatus.PUBLISHING, restoredGuard.getStatus());
     }

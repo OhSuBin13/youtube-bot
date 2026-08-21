@@ -78,7 +78,86 @@ public class CommentAttempt {
         return new CommentAttempt(input);
     }
 
+    public void startPublishing(Instant requestedAt) {
+        requireStatus(CommentAttemptStatus.APPROVED);
+        if (requestedAt == null || requestedAt.isBefore(approvedAt)) {
+            throw new IllegalArgumentException("requestedAt must not be before approvedAt");
+        }
+
+        this.status = CommentAttemptStatus.PUBLISHING;
+        this.requestedAt = requestedAt;
+    }
+
+    public void markSucceeded(String youtubeCommentId, Instant completedAt) {
+        requirePublishingCompletion(completedAt);
+        if (youtubeCommentId == null || youtubeCommentId.isBlank()
+                || youtubeCommentId.codePointCount(0, youtubeCommentId.length()) > 255) {
+            throw new IllegalArgumentException(
+                    "youtubeCommentId must be non-blank and at most 255 characters");
+        }
+
+        this.status = CommentAttemptStatus.SUCCEEDED;
+        this.youtubeCommentId = youtubeCommentId;
+        this.errorCode = null;
+        this.completedAt = completedAt;
+    }
+
+    public void markFailed(String errorCode, Instant completedAt) {
+        completeWithError(CommentAttemptStatus.FAILED, errorCode, completedAt);
+    }
+
+    public void markUnknown(String errorCode, Instant completedAt) {
+        completeWithError(CommentAttemptStatus.UNKNOWN, errorCode, completedAt);
+    }
+
+    private void completeWithError(
+            CommentAttemptStatus completedStatus,
+            String errorCode,
+            Instant completedAt) {
+        requirePublishingCompletion(completedAt);
+        if (errorCode == null || !errorCode.matches("[A-Za-z0-9_.-]{1,100}")) {
+            throw new IllegalArgumentException(
+                    "errorCode must contain 1 to 100 letters, digits, dots, underscores, or hyphens");
+        }
+
+        this.status = completedStatus;
+        this.youtubeCommentId = null;
+        this.errorCode = errorCode;
+        this.completedAt = completedAt;
+    }
+
+    private void requirePublishingCompletion(Instant completedAt) {
+        requireStatus(CommentAttemptStatus.PUBLISHING);
+        if (completedAt == null || completedAt.isBefore(requestedAt)) {
+            throw new IllegalArgumentException("completedAt must not be before requestedAt");
+        }
+    }
+
+    private void requireStatus(CommentAttemptStatus expectedStatus) {
+        if (status != expectedStatus) {
+            throw new IllegalStateException(
+                    "Cannot transition comment attempt from " + status
+                            + "; expected " + expectedStatus);
+        }
+    }
+
     public CommentAttemptStatus getStatus() {
         return status;
+    }
+
+    public String getYoutubeCommentId() {
+        return youtubeCommentId;
+    }
+
+    public String getErrorCode() {
+        return errorCode;
+    }
+
+    public Instant getRequestedAt() {
+        return requestedAt;
+    }
+
+    public Instant getCompletedAt() {
+        return completedAt;
     }
 }

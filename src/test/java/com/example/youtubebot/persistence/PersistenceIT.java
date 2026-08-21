@@ -38,6 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -284,6 +285,37 @@ class PersistenceIT {
         assertEquals(SafetyReview.REQUIRES_HUMAN_REVIEW, restoredGeneration.getSafetyReview());
         assertEquals(CommentAttemptStatus.APPROVED, restoredAttempt.getStatus());
         assertEquals(GuardStatus.PUBLISHING, restoredGuard.getStatus());
+    }
+
+    @Test
+    void commentAttemptTransitionsPersistWithConsistentResultFields() {
+        Instant approvedAt = Instant.parse("2026-08-21T00:00:00Z");
+        Instant requestedAt = approvedAt.plusSeconds(1);
+        Instant completedAt = requestedAt.plusSeconds(1);
+        UUID attemptId = UUID.randomUUID();
+        CommentAttempt attempt = CommentAttempt.approved(new ApprovedCommentAttempt(
+                attemptId,
+                "dQw4w9WgXcQ",
+                UUID.randomUUID(),
+                "AI original text",
+                "User-approved text",
+                "UC_AUTHOR_CHANNEL",
+                "UC_TARGET_CHANNEL",
+                approvedAt));
+        commentAttemptRepository.saveAndFlush(attempt);
+
+        attempt.startPublishing(requestedAt);
+        commentAttemptRepository.saveAndFlush(attempt);
+        attempt.markSucceeded("youtube-comment-id", completedAt);
+        commentAttemptRepository.saveAndFlush(attempt);
+
+        entityManager.clear();
+        CommentAttempt restored = commentAttemptRepository.findById(attemptId).orElseThrow();
+        assertEquals(CommentAttemptStatus.SUCCEEDED, restored.getStatus());
+        assertEquals("youtube-comment-id", restored.getYoutubeCommentId());
+        assertEquals(requestedAt, restored.getRequestedAt());
+        assertEquals(completedAt, restored.getCompletedAt());
+        assertNull(restored.getErrorCode());
     }
 
     @Test

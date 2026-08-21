@@ -22,3 +22,8 @@ management:
   endpoint:
     health:
       show-details: always
+
+youtube:
+  token-encryption:
+    key: ${YOUTUBE_TOKEN_ENCRYPTION_KEY}
+    key-version: ${YOUTUBE_TOKEN_ENCRYPTION_KEY_VERSION:1}

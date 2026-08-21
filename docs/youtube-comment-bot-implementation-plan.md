@@ -20,7 +20,7 @@ YouTube URL 입력
 
 다음 원칙을 MVP 전체에 적용합니다.
 
-- YouTube 웹 화면을 Playwright로 조작하지 않고 공식 YouTube Data API를 사용합니다.
+- YouTube 웹 화면을 공식 YouTube Data API를 사용하여 조작합니다.
 - YouTube 페이지, 비공식 transcript endpoint, 공개 영상의 자막을 스크래핑하지 않습니다.
 - 클라우드 AI를 호출하지 않고 `127.0.0.1`에서 실행되는 Ollama만 사용합니다.
 - AI가 만든 댓글은 초안일 뿐이며 사용자 승인 없이 게시하지 않습니다.

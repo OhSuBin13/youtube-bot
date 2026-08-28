@@ -18,7 +18,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -140,6 +139,7 @@ class GoogleOAuthFlowIT extends PostgreSqlIntegrationTest {
         MvcResult connectResult = mockMvc.perform(get("/oauth/connect")).andReturn();
         org.springframework.mock.web.MockHttpSession session =
                 (org.springframework.mock.web.MockHttpSession) connectResult.getRequest().getSession(false);
+        assertNotNull(session);
 
         mockMvc.perform(get("/oauth/callback")
                         .session(session)

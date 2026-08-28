@@ -3,6 +3,7 @@ package com.example.youtubebot.oauth;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
@@ -47,7 +48,7 @@ public class GoogleOAuthHttpClient implements GoogleOAuthGateway {
                     .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                     .body(form)
                     .retrieve()
-                    .onStatus(status -> status.isError(), (request, failedResponse) -> {
+                    .onStatus(HttpStatusCode::isError, (request, failedResponse) -> {
                         throw new GoogleOAuthException(
                                 GoogleOAuthErrorCode.TOKEN_EXCHANGE_FAILED,
                                 "Google OAuth token exchange failed");
@@ -62,8 +63,6 @@ public class GoogleOAuthHttpClient implements GoogleOAuthGateway {
                     response.accessToken(),
                     new RefreshToken(response.refreshToken()),
                     new GrantedScopes(parseScopes(response.scope())));
-        } catch (GoogleOAuthException exception) {
-            throw exception;
         } catch (RestClientException exception) {
             throw new GoogleOAuthException(
                     GoogleOAuthErrorCode.TOKEN_EXCHANGE_FAILED,
@@ -86,7 +85,7 @@ public class GoogleOAuthHttpClient implements GoogleOAuthGateway {
                     .uri(uri)
                     .headers(headers -> headers.setBearerAuth(accessToken))
                     .retrieve()
-                    .onStatus(status -> status.isError(), (request, failedResponse) -> {
+                    .onStatus(HttpStatusCode::isError, (request, failedResponse) -> {
                         throw new GoogleOAuthException(
                                 GoogleOAuthErrorCode.CHANNEL_LOOKUP_FAILED,
                                 "The authenticated YouTube channel could not be read");
@@ -103,8 +102,6 @@ public class GoogleOAuthHttpClient implements GoogleOAuthGateway {
             ChannelItem channel = items.getFirst();
             String title = channel.snippet() == null ? null : channel.snippet().title();
             return new YouTubeChannelIdentity(channel.id(), title);
-        } catch (GoogleOAuthException exception) {
-            throw exception;
         } catch (RestClientException exception) {
             throw new GoogleOAuthException(
                     GoogleOAuthErrorCode.CHANNEL_LOOKUP_FAILED,
@@ -126,14 +123,12 @@ public class GoogleOAuthHttpClient implements GoogleOAuthGateway {
                     .onStatus(status -> status.value() == 400, (request, response) -> {
                         // An invalid or already-revoked token is disconnected locally as well.
                     })
-                    .onStatus(status -> status.isError(), (request, response) -> {
+                    .onStatus(HttpStatusCode::isError, (request, response) -> {
                         throw new GoogleOAuthException(
                                 GoogleOAuthErrorCode.TOKEN_REVOKE_FAILED,
                                 "Google OAuth token revocation failed");
                     })
                     .toBodilessEntity();
-        } catch (GoogleOAuthException exception) {
-            throw exception;
         } catch (RestClientException exception) {
             throw new GoogleOAuthException(
                     GoogleOAuthErrorCode.TOKEN_REVOKE_FAILED,

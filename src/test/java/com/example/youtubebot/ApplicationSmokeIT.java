@@ -46,30 +46,35 @@ class ApplicationSmokeIT extends PostgreSqlIntegrationTest {
 
     @Test
     void disconnectRequiresCsrfToken() throws Exception {
-        HttpResponse<String> response = post("/oauth/disconnect");
+        HttpResponse<String> response = postDisconnectWithoutCsrf();
 
         assertEquals(403, response.statusCode());
     }
 
-    private HttpResponse<String> get(String path) throws Exception {
-        HttpClient client = HttpClient.newBuilder()
-                .followRedirects(HttpClient.Redirect.NEVER)
+    private HttpResponse<String> postDisconnectWithoutCsrf() throws Exception {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("http://127.0.0.1:" + serverPort + "/oauth/disconnect"))
+                .POST(HttpRequest.BodyPublishers.noBody())
                 .build();
+
+        try (HttpClient client = HttpClient.newBuilder()
+                .followRedirects(HttpClient.Redirect.NEVER)
+                .build()) {
+            return client.send(
+                    request,
+                    HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+        }
+    }
+
+    private HttpResponse<String> get(String path) throws Exception {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create("http://127.0.0.1:" + serverPort + path))
                 .GET()
                 .build();
-        return client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
-    }
-
-    private HttpResponse<String> post(String path) throws Exception {
-        HttpClient client = HttpClient.newBuilder()
+        try(HttpClient client = HttpClient.newBuilder()
                 .followRedirects(HttpClient.Redirect.NEVER)
-                .build();
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("http://127.0.0.1:" + serverPort + path))
-                .POST(HttpRequest.BodyPublishers.noBody())
-                .build();
-        return client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+                .build()) {
+            return client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+        }
     }
 }

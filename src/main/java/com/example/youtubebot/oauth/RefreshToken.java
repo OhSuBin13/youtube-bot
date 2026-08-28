@@ -11,6 +11,7 @@ public record RefreshToken(String value) {
     }
 
     @Override
+    @SuppressWarnings("NullableProblems")
     public String toString() {
         return "RefreshToken[REDACTED]";
     }

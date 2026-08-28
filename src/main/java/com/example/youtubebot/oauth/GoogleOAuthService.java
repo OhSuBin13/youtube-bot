@@ -64,7 +64,7 @@ public class GoogleOAuthService {
         return new OAuthAuthorization(authorizationUri, flowState);
     }
 
-    public YouTubeChannelIdentity completeConnection(
+    public void completeConnection(
             String code,
             String returnedState,
             OAuthFlowState flowState) {
@@ -89,7 +89,6 @@ public class GoogleOAuthService {
                     grant.grantedScopes(),
                     channel,
                     clock.instant()));
-            return channel;
         } catch (RuntimeException exception) {
             revokeAfterFailedConnection(grant.refreshToken(), exception);
             throw exception;

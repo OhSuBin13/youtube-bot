@@ -13,6 +13,11 @@ spring:
 server:
   address: 127.0.0.1
   port: 8080
+  servlet:
+    session:
+      cookie:
+        http-only: true
+        same-site: lax
 
 management:
   endpoints:
@@ -27,3 +32,13 @@ youtube:
   token-encryption:
     key: ${YOUTUBE_TOKEN_ENCRYPTION_KEY}
     key-version: ${YOUTUBE_TOKEN_ENCRYPTION_KEY_VERSION:1}
+
+google:
+  oauth:
+    client-id: ${GOOGLE_OAUTH_CLIENT_ID:}
+    client-secret: ${GOOGLE_OAUTH_CLIENT_SECRET:}
+    redirect-uri: ${GOOGLE_OAUTH_REDIRECT_URI:http://127.0.0.1:8080/oauth/callback}
+    authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
+    token-uri: https://oauth2.googleapis.com/token
+    revoke-uri: https://oauth2.googleapis.com/revoke
+    youtube-api-uri: https://www.googleapis.com/youtube/v3

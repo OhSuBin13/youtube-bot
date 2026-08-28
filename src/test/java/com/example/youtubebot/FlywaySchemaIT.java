@@ -38,6 +38,13 @@ class FlywaySchemaIT extends PostgreSqlIntegrationTest {
                 "video_context"), tables);
         assertColumnType("oauth_connection", "refresh_token_ciphertext", "bytea");
         assertColumnType("oauth_connection", "refresh_token_nonce", "bytea");
+        assertEquals(0, jdbcTemplate.queryForObject("""
+                SELECT count(*)
+                FROM information_schema.columns
+                WHERE table_schema = 'public'
+                  AND table_name = 'oauth_connection'
+                  AND column_name = 'access_token'
+                """, Integer.class));
         assertColumnType("video_context", "video_metadata", "jsonb");
         assertColumnType("video_context", "collected_at", "timestamp with time zone");
         assertColumnType("ai_generation", "draft_id", "uuid");

@@ -3,15 +3,11 @@ package com.example.youtubebot.oauth;
 import java.time.Instant;
 import java.util.Objects;
 
-public record OAuthConnectionCredentials(
-        RefreshToken refreshToken,
-        GrantedScopes grantedScopes,
+public record OAuthConnectionInfo(
         YouTubeChannelIdentity channel,
         Instant connectedAt) {
 
-    public OAuthConnectionCredentials {
-        Objects.requireNonNull(refreshToken, "Refresh token is required");
-        Objects.requireNonNull(grantedScopes, "Granted scopes are required");
+    public OAuthConnectionInfo {
         Objects.requireNonNull(channel, "YouTube channel identity is required");
         Objects.requireNonNull(connectedAt, "Connected time is required");
     }

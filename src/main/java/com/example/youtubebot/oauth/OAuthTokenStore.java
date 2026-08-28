@@ -26,18 +26,20 @@ public class OAuthTokenStore {
     }
 
     @Transactional
-    public void save(OAuthConnectionInput input) {
-        EncryptedToken encryptedToken = tokenCipher.encrypt(input.refreshToken());
-        OAuthConnection connection = new OAuthConnection(
+    public void create(OAuthConnectionInput input) {
+        EncryptedToken encryptedToken = tokenCipher.encrypt(input.refreshToken().value());
+        int insertedRows = repository.insertIfAbsent(
                 SINGLETON_ID,
                 encryptedToken.ciphertext(),
                 encryptedToken.nonce(),
                 encryptedToken.keyVersion(),
                 serializeScopes(input.grantedScopes()),
-                input.channelId(),
-                input.channelName(),
+                input.channel().channelId(),
+                input.channel().channelName(),
                 input.connectedAt());
-        repository.save(connection);
+        if (insertedRows == 0) {
+            throw alreadyConnected();
+        }
     }
 
     @Transactional(readOnly = true)
@@ -48,12 +50,28 @@ public class OAuthTokenStore {
                     connection.getRefreshTokenNonce(),
                     connection.getKeyVersion());
             return new OAuthConnectionCredentials(
-                    tokenCipher.decrypt(encryptedToken),
+                    new RefreshToken(tokenCipher.decrypt(encryptedToken)),
                     deserializeScopes(connection.getGrantedScope()),
-                    connection.getChannelId(),
-                    connection.getChannelName(),
+                    new YouTubeChannelIdentity(
+                            connection.getChannelId(),
+                            connection.getChannelName()),
                     connection.getConnectedAt());
         });
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<OAuthConnectionInfo> findConnectionInfo() {
+        return repository.findById(SINGLETON_ID)
+                .map(connection -> new OAuthConnectionInfo(
+                        new YouTubeChannelIdentity(
+                                connection.getChannelId(),
+                                connection.getChannelName()),
+                        connection.getConnectedAt()));
+    }
+
+    @Transactional(readOnly = true)
+    public boolean exists() {
+        return repository.existsById(SINGLETON_ID);
     }
 
     @Transactional
@@ -61,11 +79,17 @@ public class OAuthTokenStore {
         repository.deleteById(SINGLETON_ID);
     }
 
-    private String serializeScopes(Set<String> scopes) {
-        return String.join(" ", new TreeSet<>(scopes));
+    private GoogleOAuthException alreadyConnected() {
+        return new GoogleOAuthException(
+                GoogleOAuthErrorCode.ALREADY_CONNECTED,
+                "Disconnect the current YouTube channel before connecting another one");
     }
 
-    private Set<String> deserializeScopes(String scopes) {
-        return Set.copyOf(Arrays.asList(scopes.split(" ")));
+    private String serializeScopes(GrantedScopes scopes) {
+        return String.join(" ", new TreeSet<>(scopes.values()));
+    }
+
+    private GrantedScopes deserializeScopes(String scopes) {
+        return new GrantedScopes(Set.copyOf(Arrays.asList(scopes.split(" "))));
     }
 }

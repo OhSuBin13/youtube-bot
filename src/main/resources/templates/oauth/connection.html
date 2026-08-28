@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>YouTube 작성 채널 연결</title>
+  <style>
+    body { max-width: 720px; margin: 64px auto; padding: 0 24px; font-family: sans-serif; line-height: 1.6; color: #202124; }
+    main { border: 1px solid #dadce0; border-radius: 12px; padding: 32px; }
+    .notice { padding: 12px 16px; border-radius: 8px; background: #e6f4ea; }
+    .error { padding: 12px 16px; border-radius: 8px; background: #fce8e6; color: #b3261e; }
+    dl { display: grid; grid-template-columns: 120px 1fr; gap: 8px 16px; }
+    dt { font-weight: 700; }
+    dd { margin: 0; overflow-wrap: anywhere; }
+    a.button, button { display: inline-block; border: 0; border-radius: 8px; padding: 10px 16px; color: white; background: #1a73e8; font: inherit; text-decoration: none; cursor: pointer; }
+    button.danger { background: #b3261e; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>YouTube 작성 채널</h1>
+  <p>댓글을 작성할 Google 계정을 연결하면 현재 YouTube 채널이 작성 채널로 고정됩니다.</p>
+
+  <p class="notice" th:if="${resultMessage}" th:text="${resultMessage}"></p>
+  <p class="error" th:if="${errorMessage}" th:text="${errorMessage}"></p>
+
+  <section th:if="${connection.connected}">
+    <h2>연결됨</h2>
+    <dl>
+      <dt>채널명</dt>
+      <dd th:text="${connection.channelName}"></dd>
+      <dt>채널 ID</dt>
+      <dd th:text="${connection.channelId}"></dd>
+      <dt>연결 시각</dt>
+      <dd th:text="${connection.connectedAt}"></dd>
+    </dl>
+    <p>작성 채널을 바꾸려면 현재 연결을 해제한 뒤 다른 계정으로 다시 연결하세요.</p>
+    <form th:action="@{/oauth/disconnect}" method="post">
+      <button class="danger" type="submit">Google 연결 해제</button>
+    </form>
+  </section>
+
+  <section th:unless="${connection.connected}">
+    <h2>연결 안 됨</h2>
+    <p th:unless="${connection.configured}">서버에 Google OAuth 클라이언트 설정이 필요합니다.</p>
+    <a class="button" th:if="${connection.configured}" th:href="@{/oauth/connect}">Google 계정 연결</a>
+  </section>
+</main>
+</body>
+</html>

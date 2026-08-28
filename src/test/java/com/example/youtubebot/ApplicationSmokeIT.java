@@ -32,13 +32,23 @@ class ApplicationSmokeIT extends PostgreSqlIntegrationTest {
     }
 
     @Test
-    void protectedPageRedirectsAnonymousUserToLogin() throws Exception {
+    void localOAuthPageLoadsWithoutSeparateFormLogin() throws Exception {
         HttpResponse<String> response = get("/");
 
         assertEquals(302, response.statusCode());
         String location = response.headers().firstValue("Location").orElseThrow();
-        assertTrue(location.endsWith("/login"));
-        assertEquals(200, get("/login").statusCode());
+        assertTrue(location.endsWith("/oauth"));
+
+        HttpResponse<String> page = get("/oauth");
+        assertEquals(200, page.statusCode());
+        assertTrue(page.body().contains("YouTube 작성 채널"));
+    }
+
+    @Test
+    void disconnectRequiresCsrfToken() throws Exception {
+        HttpResponse<String> response = post("/oauth/disconnect");
+
+        assertEquals(403, response.statusCode());
     }
 
     private HttpResponse<String> get(String path) throws Exception {
@@ -48,6 +58,17 @@ class ApplicationSmokeIT extends PostgreSqlIntegrationTest {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create("http://127.0.0.1:" + serverPort + path))
                 .GET()
+                .build();
+        return client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+    }
+
+    private HttpResponse<String> post(String path) throws Exception {
+        HttpClient client = HttpClient.newBuilder()
+                .followRedirects(HttpClient.Redirect.NEVER)
+                .build();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("http://127.0.0.1:" + serverPort + path))
+                .POST(HttpRequest.BodyPublishers.noBody())
                 .build();
         return client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
     }
